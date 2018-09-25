@@ -73,5 +73,9 @@ public class Worker {
         this.endDate = endDate;
     }
 
+    public String toString() {
+    	String res = getName()+" works from "+getStartDate()+" to "+getEndDate();
+    	return res;
+    }
    
 }
