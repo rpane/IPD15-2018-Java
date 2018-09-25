@@ -18,18 +18,24 @@ public class Day02PeopleFromFile {
 
 	static ArrayList<Person> people = new ArrayList<>();
 
+	@SuppressWarnings("finally")
 	public static void main(String[] args) {
 
 		// File to read
 		try (Scanner fileInput = new Scanner(new File("people.txt"))) {
 			while (fileInput.hasNextLine()) {
-				String name = fileInput.next();
-				int age = fileInput.nextInt();
+				
 				try {
+					String name = fileInput.next();
+					int age = fileInput.nextInt();
 					Person e = new Person(name, age);
 					people.add(e);
 				} catch (IllegalArgumentException ex) {
 					System.out.println("Argument invalid: " + ex.getMessage());
+					
+				}
+				finally{
+					continue;
 				}
  
 			}

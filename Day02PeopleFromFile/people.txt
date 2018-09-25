@@ -2,6 +2,12 @@ Jerry
 33
 Mary
 22
+A
+77
+Betty
+-12
+Cecil
+C
 Liroy
 55
 Terry
