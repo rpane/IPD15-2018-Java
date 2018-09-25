@@ -17,16 +17,8 @@ public class Person {
     private int age;
 
     public Person(String name, int age) {
-        if (name.length() < 2)
-        {
-            throw new IllegalArgumentException("Name must have a length greater than 2");
-        }
-        this.name = name;
-        if( age <0 || age > 150)
-        {
-            throw new IllegalArgumentException("Age must be between 0 and 150");
-        }
-        this.age = age;
+        setName(name);
+        setAge(age);
     }
     
     /**

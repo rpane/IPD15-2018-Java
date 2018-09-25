@@ -8,6 +8,7 @@ package day02peoplefromfile;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 /**
@@ -30,13 +31,12 @@ public class Day02PeopleFromFile {
 					int age = fileInput.nextInt();
 					Person e = new Person(name, age);
 					people.add(e);
-				} catch (IllegalArgumentException ex) {
+				} catch (IllegalArgumentException | InputMismatchException ex) {
 					System.out.println("Argument invalid: " + ex.getMessage());
 					
 				}
-				finally{
-					continue;
-				}
+                           
+				
  
 			}
 
