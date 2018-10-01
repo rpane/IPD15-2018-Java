@@ -8,6 +8,7 @@ package day06notepad;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,6 +22,8 @@ import javax.swing.JOptionPane;
 public class Day06Note extends javax.swing.JFrame {
 
     File currentFile;
+    boolean FileOpened = false;
+    
     /**
      * Creates new form Day06Note
      */
@@ -103,7 +106,16 @@ public class Day06Note extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void miFileSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miFileSaveActionPerformed
-        // TODO add your handling code here:
+                
+        if(FileOpened == true){
+            try {              
+                PrintWriter updateFile = new PrintWriter(currentFile);
+                updateFile.print(taDocument.getText());
+                lblStatus.setText("File Saved "+currentFile.getAbsolutePath());
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(Day06Note.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }//GEN-LAST:event_miFileSaveActionPerformed
 
     private void miFileSaveAsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miFileSaveAsActionPerformed
@@ -116,11 +128,14 @@ public class Day06Note extends javax.swing.JFrame {
                 currentFile = FileChooser.getSelectedFile();
                 String content = new Scanner(currentFile).useDelimiter("\\Z").next();
                 taDocument.setText(content);
+                lblStatus.setText("File Opened "+currentFile.getAbsolutePath());
+                FileOpened=true;
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(this,
                     "Error reading from file: "+ex.getMessage(),
                     "File access error",
                     JOptionPane.ERROR_MESSAGE);
+                FileOpened=false;
             }
         }
         
