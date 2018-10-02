@@ -26,7 +26,7 @@ import javax.swing.JOptionPane;
 public class Day06Note extends javax.swing.JFrame {
 
     File currentFile;
-    boolean FileOpened = false;
+    boolean isDocModified = false;
 
     /**
      * Creates new form Day06Note
@@ -57,7 +57,7 @@ public class Day06Note extends javax.swing.JFrame {
         miFileExit = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(750, 500));
 
         lblStatus.setText("No File");
@@ -118,7 +118,7 @@ public class Day06Note extends javax.swing.JFrame {
 
     private void miFileSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miFileSaveActionPerformed
 
-        if (FileOpened == true) {
+        if (isDocModified == true) {
             try (FileWriter fw = new FileWriter(currentFile, false);
                     BufferedWriter bw = new BufferedWriter(fw);
                     PrintWriter out = new PrintWriter(bw)) {
@@ -152,6 +152,7 @@ public class Day06Note extends javax.swing.JFrame {
                 taDocument.write(new OutputStreamWriter(new FileOutputStream(file),
                         "utf-8"));
                lblStatus.setText("File Saved " + file.getAbsolutePath());
+               isDocModified = false;
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -165,13 +166,13 @@ public class Day06Note extends javax.swing.JFrame {
                 String content = new Scanner(currentFile).useDelimiter("\\Z").next();
                 taDocument.setText(content);
                 lblStatus.setText("File Opened " + currentFile.getAbsolutePath());
-                FileOpened = true;
+                isDocModified = true;
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(this,
                         "Error reading from file: " + ex.getMessage(),
                         "File access error",
                         JOptionPane.ERROR_MESSAGE);
-                FileOpened = false;
+                isDocModified = false;
             }
         }
 
