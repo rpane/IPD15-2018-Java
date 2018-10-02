@@ -5,9 +5,13 @@
  */
 package day06notepad;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -23,7 +27,7 @@ public class Day06Note extends javax.swing.JFrame {
 
     File currentFile;
     boolean FileOpened = false;
-    
+
     /**
      * Creates new form Day06Note
      */
@@ -53,7 +57,8 @@ public class Day06Note extends javax.swing.JFrame {
         miFileExit = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setMinimumSize(new java.awt.Dimension(750, 500));
 
         lblStatus.setText("No File");
         lblStatus.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
@@ -75,6 +80,7 @@ public class Day06Note extends javax.swing.JFrame {
         });
         jMenu1.add(miFileOpen);
 
+        miFileSave.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.CTRL_MASK));
         miFileSave.setText("Save");
         miFileSave.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -93,6 +99,11 @@ public class Day06Note extends javax.swing.JFrame {
         jMenu1.add(jSeparator1);
 
         miFileExit.setText("Exit");
+        miFileExit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miFileExitActionPerformed(evt);
+            }
+        });
         jMenu1.add(miFileExit);
 
         jMenuBar1.add(jMenu1);
@@ -106,20 +117,45 @@ public class Day06Note extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void miFileSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miFileSaveActionPerformed
-                
-        if(FileOpened == true){
-            try {              
-                PrintWriter updateFile = new PrintWriter(currentFile);
-                updateFile.print(taDocument.getText());
-                lblStatus.setText("File Saved "+currentFile.getAbsolutePath());
+
+        if (FileOpened == true) {
+            try (FileWriter fw = new FileWriter(currentFile, false);
+                    BufferedWriter bw = new BufferedWriter(fw);
+                    PrintWriter out = new PrintWriter(bw)) {
+
+                out.println(taDocument.getText());
+                lblStatus.setText("File Saved " + currentFile.getAbsolutePath());
             } catch (FileNotFoundException ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Error reading from file: " + ex.getMessage(),
+                        "File access error",
+                        JOptionPane.ERROR_MESSAGE);
+            } catch (IOException ex) {
                 Logger.getLogger(Day06Note.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }//GEN-LAST:event_miFileSaveActionPerformed
 
     private void miFileSaveAsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miFileSaveAsActionPerformed
-        // TODO add your handling code here:
+        JFileChooser fileChooser = new JFileChooser();
+        int retval = fileChooser.showSaveDialog(this);
+        if (retval == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            if (file == null) {
+                return;
+            }
+            if (!file.getName().toLowerCase().endsWith(".txt")) {
+                file = new File(file.getParentFile(), file.getName() + ".txt");
+            }
+            
+            try {
+                taDocument.write(new OutputStreamWriter(new FileOutputStream(file),
+                        "utf-8"));
+               lblStatus.setText("File Saved " + file.getAbsolutePath());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }//GEN-LAST:event_miFileSaveAsActionPerformed
 
     private void miFileOpenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miFileOpenActionPerformed
@@ -128,18 +164,22 @@ public class Day06Note extends javax.swing.JFrame {
                 currentFile = FileChooser.getSelectedFile();
                 String content = new Scanner(currentFile).useDelimiter("\\Z").next();
                 taDocument.setText(content);
-                lblStatus.setText("File Opened "+currentFile.getAbsolutePath());
-                FileOpened=true;
+                lblStatus.setText("File Opened " + currentFile.getAbsolutePath());
+                FileOpened = true;
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(this,
-                    "Error reading from file: "+ex.getMessage(),
-                    "File access error",
-                    JOptionPane.ERROR_MESSAGE);
-                FileOpened=false;
+                        "Error reading from file: " + ex.getMessage(),
+                        "File access error",
+                        JOptionPane.ERROR_MESSAGE);
+                FileOpened = false;
             }
         }
-        
+
     }//GEN-LAST:event_miFileOpenActionPerformed
+
+    private void miFileExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miFileExitActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_miFileExitActionPerformed
 
     /**
      * @param args the command line arguments
