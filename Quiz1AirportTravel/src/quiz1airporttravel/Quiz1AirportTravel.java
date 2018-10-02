@@ -17,7 +17,7 @@ public class Quiz1AirportTravel {
     static Scanner input = new Scanner(System.in);
     static ArrayList<Airport> airportList = new ArrayList<>();
 
-    public static void readData() {
+    public static void readData() throws InvalidDataException {
 
         try (Scanner fileInput = new Scanner(new File(FILE_NAME))) {
             while (fileInput.hasNextLine()) {
@@ -55,7 +55,7 @@ public class Quiz1AirportTravel {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InvalidDataException {
         readData();
         try {
             while (true) {
@@ -187,7 +187,7 @@ public class Quiz1AirportTravel {
         
     }
 
-    private static void addAirport() {
+    private static void addAirport() throws InvalidDataException {
         System.out.print("Enter Code:");
         String code = input.nextLine();
         System.out.print("Enter City:");

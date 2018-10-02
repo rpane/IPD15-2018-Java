@@ -13,12 +13,12 @@ public class Airport {
     private String code, city;
     private double latitude,longitude;
 
-    public Airport(String code, String city, double latitude, double longitude){
+    public Airport(String code, String city, double latitude, double longitude) throws InvalidDataException{
            
-        this.code = code;
-        this.city = city;
-        this.latitude = latitude;
-        this.longitude = longitude;
+        setCode(code);
+        setCity(city);
+        setLatitude(latitude);
+        setLongitude(longitude);
     }
 
     /**
@@ -70,7 +70,7 @@ public class Airport {
      * @param latitude the latitude to set
      */
     public void setLatitude(double latitude) throws InvalidDataException {
-        if(latitude >= -90 || latitude <= 90)
+        if(latitude < -90 || latitude > 90)
         {
             throw new InvalidDataException("Error. Latitude is out of range.");
         }
@@ -88,7 +88,7 @@ public class Airport {
      * @param longitude the longitude to set
      */
     public void setLongitude(double longitude) throws InvalidDataException {
-        if(longitude >= -180 || longitude <= 180)
+        if(longitude < -180 || longitude > 180)
         {
             throw new InvalidDataException("Error. Longitude is out of range.");
         }
