@@ -18,6 +18,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  *
@@ -33,6 +37,27 @@ public class Day06Note extends javax.swing.JFrame {
      */
     public Day06Note() {
         initComponents();
+
+        FileFilter textFileFilter = new FileNameExtensionFilter(
+                "Text files (*.txt)", "txt");
+        FileChooser.setFileFilter(textFileFilter);
+        // TODO: put document listener here
+        taDocument.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                isDocModified = true;
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                isDocModified = true;
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                isDocModified = true;
+            }
+        });
     }
 
     /**
@@ -59,6 +84,11 @@ public class Day06Note extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(750, 500));
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
 
         lblStatus.setText("No File");
         lblStatus.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
@@ -118,43 +148,43 @@ public class Day06Note extends javax.swing.JFrame {
 
     private void miFileSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miFileSaveActionPerformed
 
-        if (isDocModified == true) {
-            try (FileWriter fw = new FileWriter(currentFile, false);
-                    BufferedWriter bw = new BufferedWriter(fw);
-                    PrintWriter out = new PrintWriter(bw)) {
-
-                out.println(taDocument.getText());
-                lblStatus.setText("File Saved " + currentFile.getAbsolutePath());
-            } catch (FileNotFoundException ex) {
-                JOptionPane.showMessageDialog(this,
-                        "Error reading from file: " + ex.getMessage(),
-                        "File access error",
-                        JOptionPane.ERROR_MESSAGE);
-            } catch (IOException ex) {
-                Logger.getLogger(Day06Note.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        if (currentFile == null) {
+            miFileSaveAsActionPerformed(evt);
+            return;
+        }
+        String content = taDocument.getText();
+        try (PrintWriter pw = new PrintWriter(currentFile)) {
+            pw.print(content);
+            isDocModified = false;
+            lblStatus.setText("File saved " + currentFile.getPath());
+        } catch (FileNotFoundException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Unable to save file: " + ex.getMessage(),
+                    "File access error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_miFileSaveActionPerformed
 
     private void miFileSaveAsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miFileSaveAsActionPerformed
-        JFileChooser fileChooser = new JFileChooser();
-        int retval = fileChooser.showSaveDialog(this);
-        if (retval == JFileChooser.APPROVE_OPTION) {
-            File file = fileChooser.getSelectedFile();
-            if (file == null) {
-                return;
+        if (FileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            currentFile = FileChooser.getSelectedFile();
+            String fileName = currentFile.getName();
+            if (!fileName.matches(".+\\.[^\\.]+")) {
+                // extension is missing - append ".txt" to path
+                String filePath = currentFile.getAbsolutePath();
+                // FIXME: what if filePath ends with "." ?
+                currentFile = new File(filePath + ".txt");
             }
-            if (!file.getName().toLowerCase().endsWith(".txt")) {
-                file = new File(file.getParentFile(), file.getName() + ".txt");
-            }
-            
-            try {
-                taDocument.write(new OutputStreamWriter(new FileOutputStream(file),
-                        "utf-8"));
-               lblStatus.setText("File Saved " + file.getAbsolutePath());
-               isDocModified = false;
-            } catch (Exception e) {
-                e.printStackTrace();
+            String content = taDocument.getText();
+            try (PrintWriter pw = new PrintWriter(currentFile)) {
+                pw.print(content);
+                isDocModified = false;
+                lblStatus.setText("File saved " + currentFile.getPath());
+            } catch (FileNotFoundException ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Unable to save file: " + ex.getMessage(),
+                        "File access error",
+                        JOptionPane.ERROR_MESSAGE);
             }
         }
     }//GEN-LAST:event_miFileSaveAsActionPerformed
@@ -165,22 +195,43 @@ public class Day06Note extends javax.swing.JFrame {
                 currentFile = FileChooser.getSelectedFile();
                 String content = new Scanner(currentFile).useDelimiter("\\Z").next();
                 taDocument.setText(content);
-                lblStatus.setText("File Opened " + currentFile.getAbsolutePath());
-                isDocModified = true;
+                lblStatus.setText("File opened " + currentFile.getPath());
+                isDocModified = false;
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(this,
                         "Error reading from file: " + ex.getMessage(),
                         "File access error",
                         JOptionPane.ERROR_MESSAGE);
-                isDocModified = false;
             }
         }
 
     }//GEN-LAST:event_miFileOpenActionPerformed
 
     private void miFileExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miFileExitActionPerformed
-        // TODO add your handling code here:
+        if (isDocModified) {
+            Object[] options = {"Save", "Don't save", "Cancel"};
+            int choice = JOptionPane.showOptionDialog(this,
+                    "Would you like to save changes?",
+                    "Document modified",
+                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    options,
+                    options[0]);
+            if (choice == JOptionPane.YES_OPTION) {
+                miFileSaveActionPerformed(evt);
+                // DO NOT dispose(); because you'll lose data if user cancelled save
+                return;
+            } else if (choice == JOptionPane.CANCEL_OPTION) {
+                return;
+            }
+        }
+        dispose();
     }//GEN-LAST:event_miFileExitActionPerformed
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        miFileExitActionPerformed(null);
+    }//GEN-LAST:event_formWindowClosing
 
     /**
      * @param args the command line arguments
