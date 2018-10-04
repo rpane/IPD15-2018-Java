@@ -1,8 +1,17 @@
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import javax.swing.DefaultListModel;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -17,16 +26,20 @@ public class TodoAppDB extends javax.swing.JFrame {
 
     DefaultListModel<Todo> modelTodoList = new DefaultListModel<>();
     Database db;
+    File currentFile;
+    
+
     /**
      * Creates new form TodoAppDB
      */
-    public TodoAppDB(){
-        try{
-        initComponents();
-        db = new Database();
-        refreshList();
+    public TodoAppDB() {
         
-        }catch (SQLException ex){
+        try {
+            initComponents();
+            db = new Database();
+            refreshList();
+
+        } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this,
                     "Unable to connect to database\n" + ex.getMessage(),
                     "Database Error",
@@ -34,22 +47,23 @@ public class TodoAppDB extends javax.swing.JFrame {
             System.exit(1);
         }
     }
-    
-    void refreshList(){
-        try{
+
+    void refreshList() {
+        try {
             ArrayList<Todo> al = db.getAllTodos();
             modelTodoList.clear();
-            for(Todo t: al){
+            for (Todo t : al) {
                 modelTodoList.addElement(t);
             }
-                
-        }catch (SQLException ex){
+
+        } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this,
                     "Unable to connect to database\n" + ex.getMessage(),
                     "Database Error",
                     JOptionPane.ERROR_MESSAGE);
         }
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -59,14 +73,19 @@ public class TodoAppDB extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        FileChooser = new javax.swing.JFileChooser();
         jScrollPane1 = new javax.swing.JScrollPane();
         lstTodos = new javax.swing.JList<>();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
+        miExport = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
         miEditAddTodo = new javax.swing.JMenuItem();
+        miEditDelete = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setPreferredSize(new java.awt.Dimension(700, 700));
+        setSize(new java.awt.Dimension(700, 700));
 
         lstTodos.setModel(modelTodoList);
         jScrollPane1.setViewportView(lstTodos);
@@ -74,12 +93,39 @@ public class TodoAppDB extends javax.swing.JFrame {
         getContentPane().add(jScrollPane1, java.awt.BorderLayout.CENTER);
 
         jMenu1.setText("File");
+
+        miExport.setText("Export to CSV");
+        miExport.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miExportActionPerformed(evt);
+            }
+        });
+        jMenu1.add(miExport);
+
         jMenuBar1.add(jMenu1);
 
         jMenu2.setText("Edit");
+        jMenu2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenu2ActionPerformed(evt);
+            }
+        });
 
         miEditAddTodo.setText("Add todo");
         jMenu2.add(miEditAddTodo);
+
+        miEditDelete.setText("Delete");
+        miEditDelete.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                miEditDeleteMouseClicked(evt);
+            }
+        });
+        miEditDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miEditDeleteActionPerformed(evt);
+            }
+        });
+        jMenu2.add(miEditDelete);
 
         jMenuBar1.add(jMenu2);
 
@@ -87,6 +133,77 @@ public class TodoAppDB extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void miEditDeleteMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_miEditDeleteMouseClicked
+
+    }//GEN-LAST:event_miEditDeleteMouseClicked
+
+    private void jMenu2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenu2ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jMenu2ActionPerformed
+
+    private void miEditDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miEditDeleteActionPerformed
+        Object[] options = {"Yes", "Cancel"};
+        int choice = JOptionPane.showOptionDialog(this,
+                "Are you sure you want to Delete selected items?",
+                "Document modified",
+                JOptionPane.YES_NO_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]);
+        if (choice == JOptionPane.YES_OPTION) {
+            for (int i = 0; i < modelTodoList.size(); i++) {
+                if (lstTodos.getSelectedIndex() == i) {
+                    try {
+                        int index =(int) modelTodoList.elementAt(i).getId();
+                        db.deleteTodoById(index);
+                        refreshList();
+                    } catch (SQLException ex) {
+                        Logger.getLogger(TodoAppDB.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+            return;
+        } else if (choice == JOptionPane.CANCEL_OPTION) {
+            return;
+        }
+
+
+    }//GEN-LAST:event_miEditDeleteActionPerformed
+
+    private void miExportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miExportActionPerformed
+        if (FileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            currentFile = FileChooser.getSelectedFile();
+            String fileName = currentFile.getName();
+            if (!fileName.matches(".+\\.[^\\.]+")) {
+                // extension is missing - append ".txt" to path
+                String filePath = currentFile.getAbsolutePath();
+                // FIXME: what if filePath ends with "." ?
+                currentFile = new File(filePath + ".txt");
+            }
+            
+            try (PrintWriter pw = new PrintWriter(currentFile)) {
+                for(int i =0;i<modelTodoList.size();i++)
+                {
+                    long id = modelTodoList.getElementAt(i).getId();
+                    String task = modelTodoList.getElementAt(i).getTask();
+                    Date date = modelTodoList.getElementAt(i).getDueDate();
+                    Boolean isDone = modelTodoList.getElementAt(i).isIsDone();
+                    
+                    Todo a = new Todo(id,task,date,isDone);
+                    pw.println(a);
+                }
+                
+                
+            } catch (FileNotFoundException ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Unable to save file: " + ex.getMessage(),
+                        "File access error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }//GEN-LAST:event_miExportActionPerformed
 
     /**
      * @param args the command line arguments
@@ -124,11 +241,14 @@ public class TodoAppDB extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JFileChooser FileChooser;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JList<Todo> lstTodos;
     private javax.swing.JMenuItem miEditAddTodo;
+    private javax.swing.JMenuItem miEditDelete;
+    private javax.swing.JMenuItem miExport;
     // End of variables declaration//GEN-END:variables
 }

@@ -24,10 +24,42 @@ public class Todo {
         this.isDone = isDone;
     }
 
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public String getTask() {
+        return task;
+    }
+
+    public void setTask(String task) {
+        this.task = task;
+    }
+
+    public Date getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(Date dueDate) {
+        this.dueDate = dueDate;
+    }
+
+    public boolean isIsDone() {
+        return isDone;
+    }
+
+    public void setIsDone(boolean isDone) {
+        this.isDone = isDone;
+    }
+
     //Todo Generate Setters and Getters
     @Override
     public String toString() {
-        return "Todo{" + "id=" + id + ", task=" + task + ", dueDate=" + dueDate + ", isDone=" + isDone + '}';
+        return id + "," + task + "," + dueDate + "," + isDone;
     }
 
 }
