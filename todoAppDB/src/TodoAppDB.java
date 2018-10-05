@@ -206,16 +206,18 @@ public class TodoAppDB extends javax.swing.JFrame {
             int [] deleteIndexList = lstTodos.getSelectedIndices();
             
             for (int i = 0; i < deleteIndexList.length; i++) {
-                if (lstTodos.getSelectedIndex() == i) {
+               
                     try {
-                        int index = (int) modelTodoList.elementAt(i).getId();
+                        long index =  modelTodoList.elementAt(deleteIndexList[i]).getId();
+                        System.out.println(index);
                         db.deleteTodoById(index);
-                        refreshList();
+                        
                     } catch (SQLException ex) {
-                        Logger.getLogger(TodoAppDB.class.getName()).log(Level.SEVERE, null, ex);
+                        System.out.println("Error");
                     }
-                }
+                
             }
+            refreshList();
             return;
         } else if (choice == JOptionPane.CANCEL_OPTION) {
             return;
