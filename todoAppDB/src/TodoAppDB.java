@@ -2,16 +2,18 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import static java.lang.String.format;
 import javax.swing.DefaultListModel;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.filechooser.FileNameExtensionFilter;
+
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -27,15 +29,16 @@ public class TodoAppDB extends javax.swing.JFrame {
     DefaultListModel<Todo> modelTodoList = new DefaultListModel<>();
     Database db;
     File currentFile;
-    
+    Todo currEditedItem; //null when adding, not-null when editing
 
     /**
      * Creates new form TodoAppDB
      */
     public TodoAppDB() {
-        
+
         try {
             initComponents();
+            dlgAddEdit.pack();
             db = new Database();
             refreshList();
 
@@ -74,6 +77,14 @@ public class TodoAppDB extends javax.swing.JFrame {
     private void initComponents() {
 
         FileChooser = new javax.swing.JFileChooser();
+        dlgAddEdit = new javax.swing.JDialog();
+        dlgAddEdit_btnCancel = new javax.swing.JButton();
+        dlgAddEdit_btnSave = new javax.swing.JButton();
+        dlgAddEdit_tfTask = new javax.swing.JTextField();
+        dlgAddEdit_tfDueDate = new javax.swing.JTextField();
+        dlgAddEdit_cbIsDone = new javax.swing.JCheckBox();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         lstTodos = new javax.swing.JList<>();
         jMenuBar1 = new javax.swing.JMenuBar();
@@ -83,11 +94,44 @@ public class TodoAppDB extends javax.swing.JFrame {
         miEditAddTodo = new javax.swing.JMenuItem();
         miEditDelete = new javax.swing.JMenuItem();
 
+        dlgAddEdit.getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        dlgAddEdit_btnCancel.setText("Cancel");
+        dlgAddEdit_btnCancel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                dlgAddEdit_btnCancelActionPerformed(evt);
+            }
+        });
+        dlgAddEdit.getContentPane().add(dlgAddEdit_btnCancel, new org.netbeans.lib.awtextra.AbsoluteConstraints(340, 30, -1, -1));
+
+        dlgAddEdit_btnSave.setText("Save");
+        dlgAddEdit_btnSave.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                dlgAddEdit_btnSaveActionPerformed(evt);
+            }
+        });
+        dlgAddEdit.getContentPane().add(dlgAddEdit_btnSave, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 70, -1, -1));
+        dlgAddEdit.getContentPane().add(dlgAddEdit_tfTask, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 20, 230, -1));
+        dlgAddEdit.getContentPane().add(dlgAddEdit_tfDueDate, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 60, 130, -1));
+
+        dlgAddEdit_cbIsDone.setText("Completed?");
+        dlgAddEdit.getContentPane().add(dlgAddEdit_cbIsDone, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 100, -1, -1));
+
+        jLabel1.setText("Task :");
+        dlgAddEdit.getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 20, -1, -1));
+
+        jLabel2.setText("Due Date:");
+        dlgAddEdit.getContentPane().add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 60, -1, -1));
+
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setPreferredSize(new java.awt.Dimension(700, 700));
         setSize(new java.awt.Dimension(700, 700));
 
         lstTodos.setModel(modelTodoList);
+        lstTodos.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                lstTodosMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(lstTodos);
 
         getContentPane().add(jScrollPane1, java.awt.BorderLayout.CENTER);
@@ -112,6 +156,11 @@ public class TodoAppDB extends javax.swing.JFrame {
         });
 
         miEditAddTodo.setText("Add todo");
+        miEditAddTodo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miEditAddTodoActionPerformed(evt);
+            }
+        });
         jMenu2.add(miEditAddTodo);
 
         miEditDelete.setText("Delete");
@@ -153,10 +202,13 @@ public class TodoAppDB extends javax.swing.JFrame {
                 options,
                 options[0]);
         if (choice == JOptionPane.YES_OPTION) {
-            for (int i = 0; i < modelTodoList.size(); i++) {
+            //Check through deleteIndexList
+            int [] deleteIndexList = lstTodos.getSelectedIndices();
+            
+            for (int i = 0; i < deleteIndexList.length; i++) {
                 if (lstTodos.getSelectedIndex() == i) {
                     try {
-                        int index =(int) modelTodoList.elementAt(i).getId();
+                        int index = (int) modelTodoList.elementAt(i).getId();
                         db.deleteTodoById(index);
                         refreshList();
                     } catch (SQLException ex) {
@@ -182,20 +234,18 @@ public class TodoAppDB extends javax.swing.JFrame {
                 // FIXME: what if filePath ends with "." ?
                 currentFile = new File(filePath + ".txt");
             }
-            
+
             try (PrintWriter pw = new PrintWriter(currentFile)) {
-                for(int i =0;i<modelTodoList.size();i++)
-                {
+                for (int i = 0; i < modelTodoList.size(); i++) {
                     long id = modelTodoList.getElementAt(i).getId();
                     String task = modelTodoList.getElementAt(i).getTask();
                     Date date = modelTodoList.getElementAt(i).getDueDate();
                     Boolean isDone = modelTodoList.getElementAt(i).isIsDone();
-                    
-                    Todo a = new Todo(id,task,date,isDone);
+
+                    Todo a = new Todo(id, task, date, isDone);
                     pw.println(a);
                 }
-                
-                
+
             } catch (FileNotFoundException ex) {
                 JOptionPane.showMessageDialog(this,
                         "Unable to save file: " + ex.getMessage(),
@@ -204,6 +254,78 @@ public class TodoAppDB extends javax.swing.JFrame {
             }
         }
     }//GEN-LAST:event_miExportActionPerformed
+
+    private void miEditAddTodoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miEditAddTodoActionPerformed
+        dlgAddEdit_tfTask.setText("");
+        dlgAddEdit_tfDueDate.setText("");
+        dlgAddEdit_cbIsDone.setSelected(false);
+        dlgAddEdit.setVisible(true);
+    }//GEN-LAST:event_miEditAddTodoActionPerformed
+
+    private void dlgAddEdit_btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dlgAddEdit_btnCancelActionPerformed
+        dlgAddEdit_tfTask.setText("");
+        dlgAddEdit_tfDueDate.setText("");
+        dlgAddEdit_cbIsDone.setSelected(false);
+        dlgAddEdit.setVisible(false);
+    }//GEN-LAST:event_dlgAddEdit_btnCancelActionPerformed
+
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+
+    private void dlgAddEdit_btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dlgAddEdit_btnSaveActionPerformed
+        String task = dlgAddEdit_tfTask.getText();
+        String strDueDate = dlgAddEdit_tfDueDate.getText();
+        boolean isDone = dlgAddEdit_cbIsDone.isSelected();
+        if (task.length() < 1) { // FIXME: max length
+            JOptionPane.showMessageDialog(dlgAddEdit,
+                    "Task must not be empty", "Input Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try {
+            Date dueDate = dateFormat.parse(strDueDate);
+            
+            if (currEditedItem == null) {
+                Todo todo = new Todo(0, task, dueDate, isDone);
+                db.addTodo(todo);
+            } else {
+                currEditedItem.task = task;
+                currEditedItem.dueDate = dueDate;
+                currEditedItem.isDone = isDone;
+                db.updateTodo(currEditedItem);
+            }
+         
+            dlgAddEdit.setVisible(false);
+            refreshList();
+        } catch (ParseException ex) {
+            JOptionPane.showMessageDialog(dlgAddEdit,
+                    "Due date must be in yyyy/MM/dd format", "Input Error",
+                    JOptionPane.ERROR_MESSAGE);
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(dlgAddEdit,
+                    "Query failed: " + ex.getMessage(), "Database error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+
+    }//GEN-LAST:event_dlgAddEdit_btnSaveActionPerformed
+
+    private void lstTodosMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lstTodosMouseClicked
+        if (evt.getClickCount() == 2) {
+            // Double-click detected
+           currEditedItem = lstTodos.getSelectedValue();
+           if(currEditedItem == null){
+               return;
+           }
+            dlgAddEdit_tfTask.setText(currEditedItem.task);
+            dlgAddEdit_tfDueDate.setText(dateFormat.format(currEditedItem.dueDate));
+            dlgAddEdit_cbIsDone.setSelected(currEditedItem.isDone);
+            dlgAddEdit.setVisible(true);
+            
+            
+            
+        }
+
+
+    }//GEN-LAST:event_lstTodosMouseClicked
 
     /**
      * @param args the command line arguments
@@ -242,6 +364,14 @@ public class TodoAppDB extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JFileChooser FileChooser;
+    private javax.swing.JDialog dlgAddEdit;
+    private javax.swing.JButton dlgAddEdit_btnCancel;
+    private javax.swing.JButton dlgAddEdit_btnSave;
+    private javax.swing.JCheckBox dlgAddEdit_cbIsDone;
+    private javax.swing.JTextField dlgAddEdit_tfDueDate;
+    private javax.swing.JTextField dlgAddEdit_tfTask;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;

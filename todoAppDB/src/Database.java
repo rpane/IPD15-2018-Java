@@ -45,13 +45,24 @@ public class Database {
 
     }
 
-    // returns id of newly created record
-    int addTodo(Todo todo) throws SQLException {
-        throw new RuntimeException("UNIMPLEMENTED");
+    
+    void addTodo(Todo todo) throws SQLException {
+        String sql = "INSERT INTO todos VALUES (NULL, ?, ? ,?)";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setString(1,todo.task);
+        pstmt.setDate(2, new java.sql.Date(todo.dueDate.getTime()));
+        pstmt.setString(3, todo.isDone ? "done" : "pending");
+        pstmt.executeUpdate();
     }
 
     void updateTodo(Todo todo) throws SQLException {
-        throw new RuntimeException("UNIMPLEMENTED");
+        String sql = "UPDATE todos SET VALUES (id = ?, task = ?, dueDate = ? ,isDone =?) WHERE id = ?";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setLong(1, todo.id);
+        pstmt.setString(2,todo.task);
+        pstmt.setDate(3, new java.sql.Date(todo.dueDate.getTime()));
+        pstmt.setString(4, todo.isDone ? "done" : "pending");
+        pstmt.executeUpdate();
     }
 
     void deleteTodoById(long id) throws SQLException {
