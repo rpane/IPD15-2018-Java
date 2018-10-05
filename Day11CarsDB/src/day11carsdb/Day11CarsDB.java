@@ -43,14 +43,17 @@ public class Day11CarsDB extends javax.swing.JFrame {
         jComboBox1 = new javax.swing.JComboBox<>();
         dlgAddEdit_btnCancel = new javax.swing.JButton();
         dlgAddEdit_btnSave = new javax.swing.JButton();
+        pmEditDelete = new javax.swing.JPopupMenu();
+        pmEditDelete_miDelete = new javax.swing.JMenuItem();
+        pmEditDelete_miEdit = new javax.swing.JMenuItem();
         jLabel1 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jList1 = new javax.swing.JList<>();
+        lstCars = new javax.swing.JList<>();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
-        jMenuItem1 = new javax.swing.JMenuItem();
+        miExport = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
-        jMenuItem2 = new javax.swing.JMenuItem();
+        miExit = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
 
         jLabel2.setText("Id:");
@@ -132,26 +135,37 @@ public class Day11CarsDB extends javax.swing.JFrame {
                 .addContainerGap(57, Short.MAX_VALUE))
         );
 
+        pmEditDelete_miDelete.setText("Delete");
+        pmEditDelete.add(pmEditDelete_miDelete);
+
+        pmEditDelete_miEdit.setText("Edit");
+        pmEditDelete.add(pmEditDelete_miEdit);
+
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         jLabel1.setText("No File");
         jLabel1.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
         getContentPane().add(jLabel1, java.awt.BorderLayout.PAGE_END);
 
-        jList1.setModel(modelCarSpecs);
-        jList1.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        jScrollPane1.setViewportView(jList1);
+        lstCars.setModel(modelCarSpecs);
+        lstCars.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        lstCars.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                lstCarsMouseReleased(evt);
+            }
+        });
+        jScrollPane1.setViewportView(lstCars);
 
         getContentPane().add(jScrollPane1, java.awt.BorderLayout.CENTER);
 
         jMenu1.setText("File");
 
-        jMenuItem1.setText("Export to CSV..");
-        jMenu1.add(jMenuItem1);
+        miExport.setText("Export to CSV..");
+        jMenu1.add(miExport);
         jMenu1.add(jSeparator1);
 
-        jMenuItem2.setText("Exit");
-        jMenu1.add(jMenuItem2);
+        miExit.setText("Exit");
+        jMenu1.add(miExit);
 
         jMenuBar1.add(jMenu1);
 
@@ -162,6 +176,12 @@ public class Day11CarsDB extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void lstCarsMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lstCarsMouseReleased
+        if(evt.isPopupTrigger()){
+            pmEditDelete.show(this,evt.getX(),evt.getY());
+        }
+    }//GEN-LAST:event_lstCarsMouseReleased
 
     /**
      * @param args the command line arguments
@@ -212,13 +232,16 @@ public class Day11CarsDB extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
-    private javax.swing.JList<Car> jList1;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JMenuItem jMenuItem1;
-    private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JPopupMenu.Separator jSeparator1;
+    private javax.swing.JList<Car> lstCars;
+    private javax.swing.JMenuItem miExit;
+    private javax.swing.JMenuItem miExport;
+    private javax.swing.JPopupMenu pmEditDelete;
+    private javax.swing.JMenuItem pmEditDelete_miDelete;
+    private javax.swing.JMenuItem pmEditDelete_miEdit;
     // End of variables declaration//GEN-END:variables
 }
