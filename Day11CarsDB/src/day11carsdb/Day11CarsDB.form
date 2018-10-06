@@ -108,8 +108,8 @@
         </Component>
         <Component class="javax.swing.JSlider" name="dlgAddEdit_sldEngine">
           <Properties>
-            <Property name="maximum" type="int" value="20"/>
-            <Property name="value" type="int" value="10"/>
+            <Property name="maximum" type="int" value="200"/>
+            <Property name="value" type="int" value="100"/>
           </Properties>
         </Component>
         <Component class="javax.swing.JLabel" name="jLabel5">

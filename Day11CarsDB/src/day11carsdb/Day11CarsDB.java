@@ -62,8 +62,8 @@ public class Day11CarsDB extends javax.swing.JFrame {
 
         jLabel4.setText("Enigine Size: ");
 
-        dlgAddEdit_sldEngine.setMaximum(20);
-        dlgAddEdit_sldEngine.setValue(10);
+        dlgAddEdit_sldEngine.setMaximum(200);
+        dlgAddEdit_sldEngine.setValue(100);
 
         jLabel5.setText("Fuel Type: ");
 
