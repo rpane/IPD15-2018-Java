@@ -16,7 +16,7 @@ public class Car {
     private String makeModel;
     private BigDecimal engineSize;
     FuelType fuelType;	
-    enum FuelType { Gasoline, Diesel, Propane, Other }
+    enum FuelType { Gasoline, Diesel, Propane, Other };
 
     public Car(long id, String makeModel, BigDecimal engineSize, FuelType fuelType) {
         this.id = id;
