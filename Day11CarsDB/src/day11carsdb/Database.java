@@ -38,7 +38,8 @@ public class Database {
             long id = rs.getLong("id");
             String makeModel = rs.getString("makeModel");
             BigDecimal engineSize = rs.getBigDecimal("engineSize");
-            FuelType fuelType = rs.getString("fuelType");
+            String fuel = rs.getString("fuelType");
+            FuelType fuelType = FuelType.valueOf(fuel);
             resultList.add(new Car(id,makeModel, engineSize, fuelType));
         }
         return resultList;
