@@ -1,5 +1,3 @@
-
-
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -22,7 +20,7 @@ import java.util.Date;
  * @author MrSkud
  */
 public class Database {
-    
+
     private Connection conn;
 
     public Database() throws SQLException {
@@ -40,9 +38,40 @@ public class Database {
             BigDecimal engineSize = rs.getBigDecimal("engineSize");
             String fuel = rs.getString("fuelType");
             FuelType fuelType = FuelType.valueOf(fuel);
-            resultList.add(new Car(id,makeModel, engineSize, fuelType));
+            resultList.add(new Car(id, makeModel, engineSize, fuelType));
         }
         return resultList;
     }
-        
+
+    void addCar(Car car) throws SQLException {
+        String sql = "INSERT INTO cars VALUES (NULL, ?, ? ,?)";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setString(1, car.getMakeModel());
+        pstmt.setBigDecimal(2, car.getEngineSize());
+        pstmt.setString(3, car.getFuelType().name());
+        pstmt.executeUpdate();
+    }
+
+    void updateCar(Car car) throws SQLException {
+        String sql = "UPDATE cars SET VALUES (id = ?, makeModel = ?, engineSize = ? ,fuelType =?) WHERE id = ?";
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+        pstmt.setLong(1, car.getId());
+        pstmt.setString(2, car.getMakeModel());
+        pstmt.setBigDecimal(3, car.getEngineSize());
+        pstmt.setString(4, car.getFuelType().name());
+        pstmt.executeUpdate();
+    }
+
+    void deleteCarById(long id) throws SQLException {
+        String sql = "DELETE FROM cars WHERE ID = ?";
+
+        PreparedStatement pstmt = conn.prepareStatement(sql);
+
+        // set the corresponding param
+        pstmt.setLong(1, id);
+        // execute the delete statement
+        pstmt.executeUpdate();
+
+    }
+
 }
