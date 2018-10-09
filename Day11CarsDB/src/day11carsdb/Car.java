@@ -12,9 +12,9 @@ import java.math.BigDecimal;
  * @author MrSkud
  */
 public class Car {
-    private long id;
-    private String makeModel;
-    private BigDecimal engineSize;
+     long id;
+     String makeModel;
+     BigDecimal engineSize;
     FuelType fuelType;	
     enum FuelType { Gasoline, Diesel, Propane, Other };
 
@@ -58,8 +58,8 @@ public class Car {
     }
 
     @Override
-    public String toString() {
-        return  id + " " + makeModel + " " + engineSize + " " + fuelType;
+    public  String toString() {
+        return  id + "," + makeModel + "," + engineSize + "," + fuelType;
     }
     
     

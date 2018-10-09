@@ -24,13 +24,13 @@ public class Database {
     private Connection conn;
 
     public Database() throws SQLException {
-        String dbUrl = "jdbc:mysql://localhost:3306/automotive";
+        String dbUrl = "jdbc:mysql://localhost:3306/auto";
         conn = DriverManager.getConnection(dbUrl, "root", "root");
     }
 
     ArrayList<Car> getAllCars() throws SQLException {
         ArrayList<Car> resultList = new ArrayList<>();
-        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM  dbo.cars");
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM  cars");
         ResultSet rs = stmt.executeQuery();
         while (rs.next()) {
             long id = rs.getLong("id");
@@ -53,12 +53,13 @@ public class Database {
     }
 
     void updateCar(Car car) throws SQLException {
-        String sql = "UPDATE cars SET VALUES (id = ?, makeModel = ?, engineSize = ? ,fuelType =?) WHERE id = ?";
+        String sql = "UPDATE cars SET id = ?, makeModel = ?, engineSize = ? ,FuelType =? WHERE id = ?";
         PreparedStatement pstmt = conn.prepareStatement(sql);
         pstmt.setLong(1, car.getId());
         pstmt.setString(2, car.getMakeModel());
-        pstmt.setBigDecimal(3, car.getEngineSize());
+        pstmt.setBigDecimal(3, car.getEngineSize());        
         pstmt.setString(4, car.getFuelType().name());
+        pstmt.setLong(5,car.getId());
         pstmt.executeUpdate();
     }
 

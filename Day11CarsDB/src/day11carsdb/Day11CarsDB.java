@@ -5,7 +5,19 @@
  */
 package day11carsdb;
 
+import day11carsdb.Car.FuelType;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+
 
 /**
  *
@@ -14,12 +26,45 @@ import javax.swing.DefaultListModel;
 public class Day11CarsDB extends javax.swing.JFrame {
 
     DefaultListModel<Car> modelCarSpecs = new DefaultListModel<>();
+    Database db;
+    File currentFile;
+    Car currEditedItem; //null when adding, not-null when editing
+   
 
     /**
      * Creates new form Day11CarsDB
      */
     public Day11CarsDB() {
-        initComponents();
+        
+        try {
+            initComponents();
+            dlgAddEdit.pack();
+            db = new Database();
+            refreshList();
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Unable to connect to database\n" + ex.getMessage(),
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
+            System.exit(1);
+        }
+    }
+
+    void refreshList() {
+        try {
+            ArrayList<Car> al = db.getAllCars();
+            modelCarSpecs.clear();
+            for (Car t : al) {
+                modelCarSpecs.addElement(t);
+            }
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Unable to connect to database\n" + ex.getMessage(),
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     /**
@@ -40,13 +85,14 @@ public class Day11CarsDB extends javax.swing.JFrame {
         dlgAddEdit_lblEngineSize = new javax.swing.JLabel();
         dlgAddEdit_sldEngine = new javax.swing.JSlider();
         jLabel5 = new javax.swing.JLabel();
-        jComboBox1 = new javax.swing.JComboBox<>();
+        dlgAddEdit_cbFuelType = new javax.swing.JComboBox<>();
         dlgAddEdit_btnCancel = new javax.swing.JButton();
         dlgAddEdit_btnSave = new javax.swing.JButton();
         pmEditDelete = new javax.swing.JPopupMenu();
         pmEditDelete_miDelete = new javax.swing.JMenuItem();
         pmEditDelete_miEdit = new javax.swing.JMenuItem();
-        jLabel1 = new javax.swing.JLabel();
+        FileChooser = new javax.swing.JFileChooser();
+        lblStatus = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         lstCars = new javax.swing.JList<>();
         jMenuBar1 = new javax.swing.JMenuBar();
@@ -54,7 +100,7 @@ public class Day11CarsDB extends javax.swing.JFrame {
         miExport = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         miExit = new javax.swing.JMenuItem();
-        jMenu2 = new javax.swing.JMenu();
+        miAddBtn = new javax.swing.JMenu();
 
         jLabel2.setText("Id:");
 
@@ -64,14 +110,29 @@ public class Day11CarsDB extends javax.swing.JFrame {
 
         dlgAddEdit_sldEngine.setMaximum(200);
         dlgAddEdit_sldEngine.setValue(100);
+        dlgAddEdit_sldEngine.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                dlgAddEdit_sldEngineStateChanged(evt);
+            }
+        });
 
         jLabel5.setText("Fuel Type: ");
 
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Gasoline", "Diesel", "Propane", "Other" }));
+        dlgAddEdit_cbFuelType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Gasoline", "Diesel", "Propane", "Other" }));
 
         dlgAddEdit_btnCancel.setText("Cancel");
+        dlgAddEdit_btnCancel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                dlgAddEdit_btnCancelActionPerformed(evt);
+            }
+        });
 
         dlgAddEdit_btnSave.setText("Save");
+        dlgAddEdit_btnSave.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                dlgAddEdit_btnSaveActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout dlgAddEditLayout = new javax.swing.GroupLayout(dlgAddEdit.getContentPane());
         dlgAddEdit.getContentPane().setLayout(dlgAddEditLayout);
@@ -99,7 +160,7 @@ public class Day11CarsDB extends javax.swing.JFrame {
                                 .addGroup(dlgAddEditLayout.createSequentialGroup()
                                     .addComponent(jLabel5)
                                     .addGap(18, 18, 18)
-                                    .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                                    .addComponent(dlgAddEdit_cbFuelType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))))
                     .addGroup(dlgAddEditLayout.createSequentialGroup()
                         .addGap(42, 42, 42)
                         .addComponent(dlgAddEdit_btnCancel)
@@ -127,7 +188,7 @@ public class Day11CarsDB extends javax.swing.JFrame {
                 .addGap(21, 21, 21)
                 .addGroup(dlgAddEditLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel5)
-                    .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(dlgAddEdit_cbFuelType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(35, 35, 35)
                 .addGroup(dlgAddEditLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(dlgAddEdit_btnCancel)
@@ -136,16 +197,26 @@ public class Day11CarsDB extends javax.swing.JFrame {
         );
 
         pmEditDelete_miDelete.setText("Delete");
+        pmEditDelete_miDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                pmEditDelete_miDeleteActionPerformed(evt);
+            }
+        });
         pmEditDelete.add(pmEditDelete_miDelete);
 
         pmEditDelete_miEdit.setText("Edit");
+        pmEditDelete_miEdit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                pmEditDelete_miEditActionPerformed(evt);
+            }
+        });
         pmEditDelete.add(pmEditDelete_miEdit);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jLabel1.setText("No File");
-        jLabel1.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
-        getContentPane().add(jLabel1, java.awt.BorderLayout.PAGE_END);
+        lblStatus.setText("No File");
+        lblStatus.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        getContentPane().add(lblStatus, java.awt.BorderLayout.PAGE_END);
 
         lstCars.setModel(modelCarSpecs);
         lstCars.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
@@ -161,16 +232,31 @@ public class Day11CarsDB extends javax.swing.JFrame {
         jMenu1.setText("File");
 
         miExport.setText("Export to CSV..");
+        miExport.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miExportActionPerformed(evt);
+            }
+        });
         jMenu1.add(miExport);
         jMenu1.add(jSeparator1);
 
         miExit.setText("Exit");
+        miExit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miExitActionPerformed(evt);
+            }
+        });
         jMenu1.add(miExit);
 
         jMenuBar1.add(jMenu1);
 
-        jMenu2.setText("Add");
-        jMenuBar1.add(jMenu2);
+        miAddBtn.setText("Add");
+        miAddBtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                miAddBtnMouseClicked(evt);
+            }
+        });
+        jMenuBar1.add(miAddBtn);
 
         setJMenuBar(jMenuBar1);
 
@@ -178,10 +264,154 @@ public class Day11CarsDB extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void lstCarsMouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lstCarsMouseReleased
-        if(evt.isPopupTrigger()){
-            pmEditDelete.show(this,evt.getX(),evt.getY());
+        if (evt.isPopupTrigger()) {
+            pmEditDelete.show(this, evt.getX(), evt.getY());
         }
     }//GEN-LAST:event_lstCarsMouseReleased
+
+    private void miExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miExitActionPerformed
+        System.exit(1);
+    }//GEN-LAST:event_miExitActionPerformed
+
+    private void miAddBtnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_miAddBtnMouseClicked
+        dlgAddEdit.setVisible(true);
+        
+        dlgAddEdit_sldEngine.setValue(100);        
+        dlgAddEdit_cbFuelType.setSelectedIndex(0);
+        dlgAddEdit_tfModel.setText("");      
+
+    }//GEN-LAST:event_miAddBtnMouseClicked
+
+    private void miExportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miExportActionPerformed
+        if (FileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            currentFile = FileChooser.getSelectedFile();
+            String fileName = currentFile.getName();
+            if (!fileName.matches(".+\\.[^\\.]+")) {
+                // extension is missing - append ".txt" to path
+                String filePath = currentFile.getAbsolutePath();
+                // FIXME: what if filePath ends with "." ?
+                currentFile = new File(filePath + ".txt");
+            }
+
+            try (PrintWriter pw = new PrintWriter(currentFile)) {
+                for (int i = 0; i < modelCarSpecs.size(); i++) {
+                    long id = modelCarSpecs.getElementAt(i).getId();
+                    String makeModel = modelCarSpecs.getElementAt(i).getMakeModel();
+                    BigDecimal engineSize = modelCarSpecs.getElementAt(i).getEngineSize();
+                    FuelType fuelType = modelCarSpecs.getElementAt(i).getFuelType();
+
+                    Car a = new Car(id, makeModel, engineSize, fuelType);
+                    pw.println(a);
+                    lblStatus.setText("Exported " + modelCarSpecs.size()+" cars to CSV");
+                }
+
+            } catch (FileNotFoundException ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Unable to save file: " + ex.getMessage(),
+                        "File access error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }//GEN-LAST:event_miExportActionPerformed
+
+    private void dlgAddEdit_sldEngineStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_dlgAddEdit_sldEngineStateChanged
+        dlgAddEdit_lblEngineSize.setText(String.valueOf((double)dlgAddEdit_sldEngine.getValue()/10));
+    }//GEN-LAST:event_dlgAddEdit_sldEngineStateChanged
+
+    private void dlgAddEdit_btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dlgAddEdit_btnSaveActionPerformed
+        
+        String x = String.valueOf(dlgAddEdit_cbFuelType.getSelectedItem());        
+        String makeModel = dlgAddEdit_tfModel.getText();
+        BigDecimal engineSize = new BigDecimal(dlgAddEdit_lblEngineSize.getText());
+        FuelType fuel = FuelType.valueOf(x);       
+        
+        Car a = new Car(0,makeModel,engineSize,fuel);
+         if (currEditedItem == null) {
+                Car cars = new Car(0, makeModel, engineSize, fuel);
+            try {
+                db.addCar(cars);
+                lblStatus.setText("Added a new car ");
+            } catch (SQLException ex) {
+                Logger.getLogger(Day11CarsDB.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            } else {
+                
+                currEditedItem.makeModel = makeModel;
+                currEditedItem.engineSize = engineSize;
+                currEditedItem.fuelType = fuel;
+            try {
+                db.updateCar(currEditedItem);
+                lblStatus.setText("Updated Vehicle");
+            } catch (SQLException ex) {
+                Logger.getLogger(Day11CarsDB.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            }
+        refreshList();
+        dlgAddEdit.setVisible(false);
+    }//GEN-LAST:event_dlgAddEdit_btnSaveActionPerformed
+
+    private void dlgAddEdit_btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dlgAddEdit_btnCancelActionPerformed
+        dlgAddEdit.setVisible(false);
+    }//GEN-LAST:event_dlgAddEdit_btnCancelActionPerformed
+
+    private void pmEditDelete_miDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pmEditDelete_miDeleteActionPerformed
+        Object[] options = {"Yes", "No"};
+            int choice = JOptionPane.showOptionDialog(this,
+                    "Are you sure you want to delete this item",
+                    "Delete Selected Field",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    options,
+                    options[0]);
+            if (choice == JOptionPane.YES_OPTION) {
+                 int [] deleteIndexList = lstCars.getSelectedIndices();
+            
+            for (int i = 0; i < deleteIndexList.length; i++) {
+               
+                    try {
+                        long index =  modelCarSpecs.elementAt(deleteIndexList[i]).getId();
+                        System.out.println(index);
+                        db.deleteCarById(index);
+                        lblStatus.setText("Deleted a car");
+                        
+                    } catch (SQLException ex) {
+                        System.out.println("Error");
+                    }
+                
+            }
+            refreshList();
+                // DO NOT dispose(); because you'll lose data if user cancelled save
+                return;
+            } else if (choice == JOptionPane.CANCEL_OPTION) {
+                return;
+            }
+    }//GEN-LAST:event_pmEditDelete_miDeleteActionPerformed
+
+    private void pmEditDelete_miEditActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_pmEditDelete_miEditActionPerformed
+        
+        int sel = lstCars.getSelectedIndex();
+        int fuelSele;
+        currEditedItem = modelCarSpecs.elementAt(sel);
+        
+        if(modelCarSpecs.elementAt(sel).getFuelType() == FuelType.valueOf("Gasoline"))
+        {
+            fuelSele=0;
+        }
+        else if(modelCarSpecs.elementAt(sel).getFuelType() == FuelType.valueOf("Diesel")){
+            fuelSele=1;
+        }else if(modelCarSpecs.elementAt(sel).getFuelType() == FuelType.valueOf("Propane")){
+            fuelSele=2;
+        }else
+            fuelSele=3;
+        dlgAddEdit_lblID.setText(Long.toString(modelCarSpecs.elementAt(sel).id));
+        dlgAddEdit_tfModel.setText(modelCarSpecs.elementAt(sel).makeModel);        
+        dlgAddEdit_lblEngineSize.setText(modelCarSpecs.elementAt(sel).getEngineSize().toString());
+        dlgAddEdit_cbFuelType.setSelectedIndex(fuelSele);
+        dlgAddEdit.setVisible(true);
+        
+        
+    }//GEN-LAST:event_pmEditDelete_miEditActionPerformed
 
     /**
      * @param args the command line arguments
@@ -219,25 +449,26 @@ public class Day11CarsDB extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JFileChooser FileChooser;
     private javax.swing.JDialog dlgAddEdit;
     private javax.swing.JButton dlgAddEdit_btnCancel;
     private javax.swing.JButton dlgAddEdit_btnSave;
+    private javax.swing.JComboBox<String> dlgAddEdit_cbFuelType;
     private javax.swing.JLabel dlgAddEdit_lblEngineSize;
     private javax.swing.JLabel dlgAddEdit_lblID;
     private javax.swing.JSlider dlgAddEdit_sldEngine;
     private javax.swing.JTextField dlgAddEdit_tfModel;
-    private javax.swing.JComboBox<String> jComboBox1;
-    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JMenu jMenu1;
-    private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JPopupMenu.Separator jSeparator1;
+    private javax.swing.JLabel lblStatus;
     private javax.swing.JList<Car> lstCars;
+    private javax.swing.JMenu miAddBtn;
     private javax.swing.JMenuItem miExit;
     private javax.swing.JMenuItem miExport;
     private javax.swing.JPopupMenu pmEditDelete;
