@@ -85,7 +85,22 @@ class CompareByPersonByAge implements Comparator<Person> {
     }
 
 }
+/*
+class ComparePersonByHeigh implements Comparator<Person> {
 
+    @Override
+    public int compare(Person o1, Person o2) {
+        // floating point values comparison must be done this way
+        if (o1.heighMeters > o2.heighMeters) {
+            return 1;
+        }
+        if (o1.heighMeters < o2.heighMeters) {
+            return -1;
+        }
+        return 0;
+    }
+
+}*/
 class CompareByPersonByNameAge implements Comparator<Person> {
 
     @Override
