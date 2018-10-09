@@ -270,7 +270,7 @@ public class Day11CarsDB extends javax.swing.JFrame {
     }//GEN-LAST:event_lstCarsMouseReleased
 
     private void miExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miExitActionPerformed
-        System.exit(1);
+        System.exit(0);        
     }//GEN-LAST:event_miExitActionPerformed
 
     private void miAddBtnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_miAddBtnMouseClicked
