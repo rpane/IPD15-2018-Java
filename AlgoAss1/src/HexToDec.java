@@ -9,7 +9,7 @@ public class HexToDec {
 		int decVal;
 		
 		char ch = hexDig.toUpperCase().charAt(0);
-		if('A' <= ch && ch <= 'F') {
+		if(ch >= 'A' && ch <= 'F') {
 			decVal = ch - 'A' +10;			
 			System.out.println("Decimal Value for Hex Degit "+ch+" is "+decVal);
 		}else if(Character.isDigit(ch)) {
